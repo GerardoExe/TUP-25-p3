@@ -22,6 +22,22 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+// Asegurar que la base de datos está creada y sembrada con datos iniciales
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<TiendaContext>();
+        DbInitializer.Initialize(context);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ocurrió un error al sembrar la base de datos.");
+    }
+}
+
 // Configurar el pipeline de solicitudes HTTP
 if (app.Environment.IsDevelopment()) {
     app.UseDeveloperExceptionPage();

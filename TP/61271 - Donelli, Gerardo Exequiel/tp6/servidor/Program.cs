@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using servidor.Data;
+using servidor.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,6 +71,96 @@ app.MapGet("/api/productos", async (string? nombre, TiendaContext db) =>
     }).ToListAsync();
 
     return Results.Ok(productos);
+});
+
+// Endpoint para registrar una nueva compra
+app.MapPost("/api/compras", async (CompraDTO compraDTO, TiendaContext db) =>
+{
+    using var transaction = await db.Database.BeginTransactionAsync();
+    try
+    {
+        // Validar datos del cliente
+        if (string.IsNullOrEmpty(compraDTO.NombreCliente) ||
+            string.IsNullOrEmpty(compraDTO.ApellidoCliente) ||
+            string.IsNullOrEmpty(compraDTO.EmailCliente))
+        {
+            return Results.BadRequest("Los datos del cliente son obligatorios");
+        }
+
+        // Validar que haya items
+        if (!compraDTO.Items.Any())
+        {
+            return Results.BadRequest("El carrito está vacío");
+        }
+
+        // Obtener y validar productos
+        var productIds = compraDTO.Items.Select(i => i.ProductoId).ToList();
+        var productos = await db.Productos
+            .Where(p => productIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id);
+
+        // Validar que existan todos los productos
+        if (productos.Count != productIds.Count)
+        {
+            return Results.BadRequest("Algunos productos no existen");
+        }
+
+        // Validar stock y calcular total
+        decimal total = 0;
+        foreach (var item in compraDTO.Items)
+        {
+            var producto = productos[item.ProductoId];
+            if (producto.Stock < item.Cantidad)
+            {
+                return Results.BadRequest($"Stock insuficiente para {producto.Nombre}");
+            }
+            total += producto.Precio * item.Cantidad;
+        }
+
+        // Crear la compra
+        var compra = new Compra
+        {
+            Fecha = DateTime.UtcNow,
+            NombreCliente = compraDTO.NombreCliente,
+            ApellidoCliente = compraDTO.ApellidoCliente,
+            EmailCliente = compraDTO.EmailCliente,
+            Total = total
+        };
+
+        // Agregar items y actualizar stock
+        foreach (var item in compraDTO.Items)
+        {
+            var producto = productos[item.ProductoId];
+            
+            compra.Items.Add(new ItemCompra
+            {
+                ProductoId = item.ProductoId,
+                Cantidad = item.Cantidad,
+                PrecioUnitario = producto.Precio
+            });
+
+            // Actualizar stock
+            producto.Stock -= item.Cantidad;
+        }
+
+        // Guardar cambios
+        db.Compras.Add(compra);
+        await db.SaveChangesAsync();
+
+        // Confirmar transacción
+        await transaction.CommitAsync();
+
+        return Results.Ok(new { 
+            Id = compra.Id,
+            Total = compra.Total,
+            Fecha = compra.Fecha
+        });
+    }
+    catch (Exception)
+    {
+        await transaction.RollbackAsync();
+        return Results.StatusCode(500);
+    }
 });
 
 app.Run();

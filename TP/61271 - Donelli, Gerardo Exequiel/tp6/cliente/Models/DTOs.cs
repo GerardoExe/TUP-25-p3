@@ -1,13 +1,12 @@
 namespace cliente.Models;
 
 public class ProductoDTO
-{
-    public int Id { get; set; }
-    public string Nombre { get; set; }
-    public string Descripcion { get; set; }
+{    public int Id { get; set; }
+    public string Nombre { get; set; } = "";
+    public string Descripcion { get; set; } = "";
     public decimal Precio { get; set; }
     public int Stock { get; set; }
-    public string ImagenUrl { get; set; }
+    public string ImagenUrl { get; set; } = "";
 }
 
 public class CompraDTO 
@@ -28,4 +27,24 @@ public class ItemCompraDTO
     public int Cantidad { get; set; }
     public decimal PrecioUnitario { get; set; }
     public ProductoDTO Producto { get; set; }
+}
+
+public class ItemCarrito
+{
+    public int ProductoId { get; set; }
+    public string Nombre { get; set; } = "";
+    public decimal Precio { get; set; }
+    public int Cantidad { get; set; }
+    public decimal Subtotal => Precio * Cantidad;
+}
+
+public class OrdenCompraDTO
+{
+    public List<ItemOrdenDTO> Items { get; set; } = new();
+}
+
+public class ItemOrdenDTO
+{
+    public int ProductoId { get; set; }
+    public int Cantidad { get; set; }
 }

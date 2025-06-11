@@ -1,4 +1,12 @@
+using Microsoft.EntityFrameworkCore;
+using servidor.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar SQLite
+builder.Services.AddDbContext<TiendaContext>(options => {
+    options.UseSqlite("Data Source=tienda.db");
+});
 
 // Agregar servicios CORS para permitir solicitudes desde el cliente
 builder.Services.AddCors(options => {

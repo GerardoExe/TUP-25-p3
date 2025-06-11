@@ -1,13 +1,93 @@
 @page "/"
+@using cliente.Models
 @using cliente.Services
-@inject ApiService Api
+@inject ProductosService ProductosService
 
-<PageTitle>Tienda Online</PageTitle>
+<PageTitle>Tienda Online - Catálogo</PageTitle>
 
-<h1>Tienda Online</h1>
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Buscar productos..." 
+                       @bind="textoBusqueda" @bind:event="oninput" @onkeyup="BuscarProductos">
+                <button class="btn btn-outline-secondary" type="button" @onclick="BuscarProductos">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+    </div>
 
-<p>Bienvenido a nuestra tienda online. Pronto verás aquí nuestro catálogo de productos.</p>
+    @if (cargando)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else if (!productos.Any())
+    {
+        <div class="alert alert-info">
+            No se encontraron productos @(!string.IsNullOrEmpty(textoBusqueda) ? $"para la búsqueda: {textoBusqueda}" : "")
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var producto in productos)
+            {
+                <div class="col">
+                    <TarjetaProducto Producto="producto" />
+                </div>
+            }
+        </div>
+    }
+</div>
 
 @code {
-    
+    private List<ProductoDTO> productos = new();
+    private string textoBusqueda = "";
+    private bool cargando = true;
+    private Timer? debounceTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarProductos();
+    }
+
+    private async Task CargarProductos(string? busqueda = null)
+    {
+        try
+        { 
+            cargando = true;
+            productos = await ProductosService.ObtenerProductosAsync(busqueda);
+            foreach(var p in productos)
+            {
+                Console.WriteLine($"{p.Nombre}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task BuscarProductos()
+    {
+        debounceTimer?.Dispose();
+        debounceTimer = new Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await CargarProductos(textoBusqueda);
+            });
+        }, null, 300, Timeout.Infinite);
+    }
 }

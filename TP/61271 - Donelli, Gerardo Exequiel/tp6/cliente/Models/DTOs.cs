@@ -1,6 +1,6 @@
-namespace servidor.Models;
+namespace cliente.Models;
 
-public class Producto
+public class ProductoDTO
 {
     public int Id { get; set; }
     public string Nombre { get; set; }
@@ -8,12 +8,9 @@ public class Producto
     public decimal Precio { get; set; }
     public int Stock { get; set; }
     public string ImagenUrl { get; set; }
-
-    // Navegación
-    public List<ItemCompra> Items { get; set; } = new();
 }
 
-public class Compra 
+public class CompraDTO 
 {
     public int Id { get; set; }
     public DateTime Fecha { get; set; }
@@ -21,20 +18,14 @@ public class Compra
     public string NombreCliente { get; set; }
     public string ApellidoCliente { get; set; }
     public string EmailCliente { get; set; }
-
-    // Navegación
-    public List<ItemCompra> Items { get; set; } = new();
+    public List<ItemCompraDTO> Items { get; set; } = new();
 }
 
-public class ItemCompra
+public class ItemCompraDTO
 {
     public int Id { get; set; }
     public int ProductoId { get; set; }
-    public int CompraId { get; set; }
     public int Cantidad { get; set; }
     public decimal PrecioUnitario { get; set; }
-
-    // Navegación
-    public Producto Producto { get; set; }
-    public Compra Compra { get; set; }
+    public ProductoDTO Producto { get; set; }
 }

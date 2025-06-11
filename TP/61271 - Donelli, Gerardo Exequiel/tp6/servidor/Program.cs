@@ -49,7 +49,27 @@ app.UseCors("AllowClientApp");
 // Mapear rutas básicas
 app.MapGet("/", () => "Servidor API está en funcionamiento");
 
-// Ejemplo de endpoint de API
-app.MapGet("/api/datos", () => new { Mensaje = "Datos desde el servidor", Fecha = DateTime.Now });
+// Endpoint para obtener productos con filtro opcional por nombre
+app.MapGet("/api/productos", async (string? nombre, TiendaContext db) =>
+{
+    var query = db.Productos.AsQueryable();
+    
+    if (!string.IsNullOrEmpty(nombre))
+    {
+        query = query.Where(p => p.Nombre.Contains(nombre));
+    }
+    
+    var productos = await query.Select(p => new
+    {
+        p.Id,
+        p.Nombre,
+        p.Descripcion,
+        p.Precio,
+        p.Stock,
+        p.ImagenUrl
+    }).ToListAsync();
+
+    return Results.Ok(productos);
+});
 
 app.Run();

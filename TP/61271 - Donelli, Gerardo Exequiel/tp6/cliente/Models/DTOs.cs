@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace cliente.Models;
 
 public class ProductoDTO
@@ -47,4 +49,19 @@ public class ItemOrdenDTO
 {
     public int ProductoId { get; set; }
     public int Cantidad { get; set; }
+}
+
+public class DatosClienteDTO
+{
+    [Required(ErrorMessage = "El nombre es obligatorio")]
+    [MinLength(2, ErrorMessage = "El nombre debe tener al menos 2 caracteres")]
+    public string Nombre { get; set; } = "";
+
+    [Required(ErrorMessage = "El apellido es obligatorio")]
+    [MinLength(2, ErrorMessage = "El apellido debe tener al menos 2 caracteres")]
+    public string Apellido { get; set; } = "";
+
+    [Required(ErrorMessage = "El email es obligatorio")]
+    [EmailAddress(ErrorMessage = "El email no tiene un formato válido")]
+    public string Email { get; set; } = "";
 }

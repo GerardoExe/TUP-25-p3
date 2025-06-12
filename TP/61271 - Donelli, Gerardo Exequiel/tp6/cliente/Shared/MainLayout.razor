@@ -1,20 +1,20 @@
+@using cliente.Shared
 @inherits LayoutComponentBase
 
 <div class="page">
-    <main>
-        <div class="top-row px-4">
-            <a href="/" class="logo">Tienda Online</a>
-            <div class="search-box">
-                <input type="search" placeholder="Buscar productos..." />
-            </div>
-            <div class="cart-icon">
-                <span class="oi oi-cart"></span>
-                <span class="cart-count">0</span>
+    <NavMenu />
+    
+    <main class="main-content">
+        <div class="container">
+            @Body
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2025 Tienda Online. Todos los derechos reservados.</p>
             </div>
         </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+    </footer>
 </div>

@@ -1,93 +1,57 @@
 @page "/"
 @using cliente.Models
 @using cliente.Services
-@inject ProductosService ProductosService
 
-<PageTitle>Tienda Online - Catálogo</PageTitle>
+<PageTitle>Catálogo - Tienda Online</PageTitle>
 
 <div class="container py-4">
-    <div class="row mb-4">
-        <div class="col">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Buscar productos..." 
-                       @bind="textoBusqueda" @bind:event="oninput" @onkeyup="BuscarProductos">
-                <button class="btn btn-outline-secondary" type="button" @onclick="BuscarProductos">
-                    <i class="bi bi-search"></i> Buscar
-                </button>
+    <div class="row">
+        @if (productos == null)
+        {
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
             </div>
-        </div>
-    </div>
-
-    @if (cargando)
-    {
-        <div class="text-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Cargando...</span>
+        }
+        else if (!productos.Any())
+        {
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No se encontraron productos @(!string.IsNullOrEmpty(textoBusqueda) ? $"para \"{textoBusqueda}\"" : "")
+                </div>
             </div>
-        </div>
-    }
-    else if (!productos.Any())
-    {
-        <div class="alert alert-info">
-            No se encontraron productos @(!string.IsNullOrEmpty(textoBusqueda) ? $"para la búsqueda: {textoBusqueda}" : "")
-        </div>
-    }
-    else
-    {
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        }
+        else
+        {
             @foreach (var producto in productos)
             {
-                <div class="col">
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3 mb-4">
                     <TarjetaProducto Producto="producto" />
                 </div>
             }
-        </div>
-    }
+        }
+    </div>
 </div>
 
 @code {
-    private List<ProductoDTO> productos = new();
+    private List<ProductoDTO> productos;
     private string textoBusqueda = "";
-    private bool cargando = true;
-    private Timer? debounceTimer;
+
+    [Inject]
+    public ProductosService ProductosService { get; set; }
+
+    [CascadingParameter]
+    public MainLayout Layout { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarProductos();
+        await BuscarProductos("");
     }
 
-    private async Task CargarProductos(string? busqueda = null)
+    private async Task BuscarProductos(string texto)
     {
-        try
-        { 
-            cargando = true;
-            productos = await ProductosService.ObtenerProductosAsync(busqueda);
-            foreach(var p in productos)
-            {
-                Console.WriteLine($"{p.Nombre}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-        
-        finally
-        {
-            cargando = false;
-            StateHasChanged();
-        }
-    }
-
-    private async Task BuscarProductos()
-    {
-        debounceTimer?.Dispose();
-        debounceTimer = new Timer(async _ =>
-        {
-            await InvokeAsync(async () =>
-            {
-                await CargarProductos(textoBusqueda);
-            });
-        }, null, 300, Timeout.Infinite);
+        textoBusqueda = texto;
+        productos = await ProductosService.ObtenerProductos(texto);
     }
 }

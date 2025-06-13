@@ -1,8 +1,14 @@
 @using cliente.Models
 @using cliente.Services
 
+@* 
+    Componente que representa una tarjeta de producto en el catálogo.
+    Muestra la información principal del producto y permite agregarlo al carrito.
+*@
 
-<div class="card h-100 shadow-sm">    <div class="position-relative" style="height: 200px;">
+<div class="card h-100 shadow-sm">    
+    @* Contenedor de la imagen con tamaño fijo y centrado del contenido *@
+    <div class="position-relative" style="height: 200px;">
         <img src="@(imagenError ? imagenPorDefecto : Producto.ImagenUrl)" 
              class="card-img-top p-3 position-absolute w-100 h-100" 
              alt="@Producto.Nombre" 
@@ -25,27 +31,44 @@
 </div>
 
 @code {
+    /// <summary>
+    /// Producto a mostrar en la tarjeta
+    /// </summary>
     [Parameter]
     public ProductoDTO Producto { get; set; } = default!;
 
+    /// <summary>
+    /// Servicio para gestionar el carrito de compras
+    /// </summary>
     [Inject]
-    public CarritoService Carrito { get; set; } = default!;    private void AgregarAlCarrito()
+    public CarritoService Carrito { get; set; } = default!;
+
+    /// <summary>
+    /// Servicio para interactuar con JavaScript
+    /// </summary>
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+
+    private bool imagenError = false;
+    private string imagenPorDefecto = "images/no-image.png";
+
+    /// <summary>
+    /// Agrega el producto al carrito si hay stock disponible
+    /// </summary>
+    private void AgregarAlCarrito()
     {
         if (Producto.Stock > 0)
         {
             Carrito.AgregarItem(Producto);
-            // Mostrar mensaje de éxito
             JSRuntime.InvokeVoidAsync("alert", $"{Producto.Nombre} agregado al carrito");
         }
     }
 
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; } = default!;    private bool imagenError = false;
-    private string imagenPorDefecto = "https://via.placeholder.com/300x300?text=Imagen+no+disponible";
-
+    /// <summary>
+    /// Maneja el error de carga de la imagen del producto
+    /// </summary>
     private void OnImageError()
     {
         imagenError = true;
-        StateHasChanged();
     }
 }

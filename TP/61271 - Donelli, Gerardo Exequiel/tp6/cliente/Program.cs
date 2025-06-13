@@ -13,5 +13,6 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://
 // Registrar los servicios
 builder.Services.AddScoped<ProductosService>();
 builder.Services.AddScoped<CarritoService>();
+builder.Services.AddScoped<PageTitleService>();
 
 await builder.Build().RunAsync();

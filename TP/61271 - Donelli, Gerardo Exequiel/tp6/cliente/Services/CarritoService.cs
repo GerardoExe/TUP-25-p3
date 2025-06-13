@@ -3,26 +3,52 @@ using cliente.Models;
 
 namespace cliente.Services;
 
+/// <summary>
+/// Servicio para gestionar el carrito de compras
+/// </summary>
 public class CarritoService
 {
     private readonly HttpClient _httpClient;
-    private List<ItemCarrito> _items = new();
+    private readonly List<ItemCarrito> _items = new();
     
+    /// <summary>
+    /// Evento que se dispara cuando el contenido del carrito cambia
+    /// </summary>
     public event Action? OnChange;
 
+    /// <summary>
+    /// Inicializa una nueva instancia del servicio de carrito
+    /// </summary>
+    /// <param name="httpClient">Cliente HTTP para realizar peticiones al servidor</param>
     public CarritoService(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }
 
+    /// <summary>
+    /// Obtiene la lista de items en el carrito
+    /// </summary>
     public IReadOnlyList<ItemCarrito> ObtenerItems() => _items.AsReadOnly();
 
+    /// <summary>
+    /// Obtiene la cantidad total de items en el carrito
+    /// </summary>
     public int ObtenerCantidadTotal() => _items.Sum(x => x.Cantidad);
 
+    /// <summary>
+    /// Obtiene el monto total del carrito
+    /// </summary>
     public decimal ObtenerTotal() => _items.Sum(x => x.Subtotal);
 
+    /// <summary>
+    /// Agrega un producto al carrito
+    /// </summary>
+    /// <param name="producto">Información del producto a agregar</param>
+    /// <param name="cantidad">Cantidad a agregar (por defecto 1)</param>
     public void AgregarItem(ProductoDTO producto, int cantidad = 1)
     {
+        if (cantidad <= 0) return;
+
         var item = _items.FirstOrDefault(x => x.ProductoId == producto.Id);
         
         if (item == null)
@@ -44,6 +70,11 @@ public class CarritoService
         NotificarCambios();
     }
 
+    /// <summary>
+    /// Actualiza la cantidad de un item en el carrito
+    /// </summary>
+    /// <param name="productoId">ID del producto a actualizar</param>
+    /// <param name="cantidad">Nueva cantidad</param>
     public void ActualizarCantidad(int productoId, int cantidad)
     {
         var item = _items.FirstOrDefault(x => x.ProductoId == productoId);
@@ -61,6 +92,10 @@ public class CarritoService
         }
     }
 
+    /// <summary>
+    /// Elimina un item del carrito
+    /// </summary>
+    /// <param name="productoId">ID del producto a eliminar</param>
     public void EliminarItem(int productoId)
     {
         var item = _items.FirstOrDefault(x => x.ProductoId == productoId);
@@ -71,12 +106,22 @@ public class CarritoService
         }
     }
 
+    /// <summary>
+    /// Vacía el carrito de compras
+    /// </summary>
     public void LimpiarCarrito()
     {
         _items.Clear();
         NotificarCambios();
     }
 
+    /// <summary>
+    /// Procesa la compra de los items en el carrito
+    /// </summary>
+    /// <param name="nombre">Nombre del cliente</param>
+    /// <param name="apellido">Apellido del cliente</param>
+    /// <param name="email">Email del cliente</param>
+    /// <returns>True si la compra fue exitosa, False en caso contrario</returns>
     public async Task<bool> ProcesarCompraAsync(string nombre, string apellido, string email)
     {
         if (!_items.Any()) return false;

@@ -1,8 +1,6 @@
 @using cliente.Shared
 @using cliente.Services
 @inherits LayoutComponentBase
-@inject PageTitleService PageTitleService 
-
 
 @* Componente de diseño principal que define la estructura básica de la aplicación *@
 
@@ -25,9 +23,11 @@
 </div>
 
 @code {
-   
+    [Inject]
+    public PageTitle PageTitle { get; set; }
+
     protected override void OnInitialized()
     {
-        PageTitleService.Title = "Tienda Online"; // Título por defecto
+        PageTitle.Title = "Tienda Online"; // Título por defecto
     }
 }

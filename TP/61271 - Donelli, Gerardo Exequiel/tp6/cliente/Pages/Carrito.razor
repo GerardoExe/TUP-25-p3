@@ -2,9 +2,11 @@
 @using cliente.Models
 @using cliente.Services
 @using Microsoft.AspNetCore.Components
-@inject CarritoService CarritoService
-@inject NavigationManager NavigationManager
-@inject IJSRuntime JS
+
+@*
+    Componente que muestra el carrito de compras.
+    Permite modificar cantidades, eliminar productos y confirmar la compra.
+*@
 
 <PageTitle>Carrito de Compras</PageTitle>
 
@@ -37,7 +39,8 @@
                         <tr>
                             <td class="align-middle">@item.Nombre</td>
                             <td class="text-center">
-                                <div class="btn-group" role="group">                                    <button class="btn btn-sm btn-outline-secondary"
+                                <div class="btn-group" role="group">                                    
+                                    <button class="btn btn-sm btn-outline-secondary"
                                             @onclick="async () => await DecrementarCantidad(item.ProductoId)">
                                         <i class="bi bi-dash"></i>
                                     </button>
@@ -88,26 +91,64 @@
 </div>
 
 @code {
+    /// <summary>
+    /// Lista de items en el carrito
+    /// </summary>
     private List<ItemCarrito> items = new();
+
+    /// <summary>
+    /// Total del carrito
+    /// </summary>
     private decimal total;
 
+    /// <summary>
+    /// Servicio para gestionar el carrito de compras
+    /// </summary>
+    [Inject]
+    public CarritoService CarritoService { get; set; }
+
+    /// <summary>
+    /// Servicio de navegación
+    /// </summary>
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+    /// <summary>
+    /// Servicio para interactuar con JavaScript
+    /// </summary>
+    [Inject]
+    public IJSRuntime JS { get; set; }
+
+    /// <summary>
+    /// Se ejecuta cuando se inicializa el componente
+    /// </summary>
     protected override void OnInitialized()
     {
         CargarCarrito();
         CarritoService.OnChange += StateHasChanged;
     }
 
+    /// <summary>
+    /// Limpia los recursos al destruir el componente
+    /// </summary>
     public void Dispose()
     {
         CarritoService.OnChange -= StateHasChanged;
     }
 
+    /// <summary>
+    /// Carga los items del carrito y calcula el total
+    /// </summary>
     private void CargarCarrito()
     {
         items = CarritoService.ObtenerItems().ToList();
         total = CarritoService.ObtenerTotal();
     }
 
+    /// <summary>
+    /// Incrementa la cantidad de un item en el carrito
+    /// </summary>
+    /// <param name="productoId">ID del producto a incrementar</param>
     private async Task IncrementarCantidad(int productoId)
     {
         var item = items.First(x => x.ProductoId == productoId);
@@ -118,7 +159,13 @@
         }
         CarritoService.ActualizarCantidad(productoId, item.Cantidad + 1);
         CargarCarrito();
-    }    private async Task DecrementarCantidad(int productoId)
+    }
+
+    /// <summary>
+    /// Decrementa la cantidad de un item en el carrito
+    /// </summary>
+    /// <param name="productoId">ID del producto a decrementar</param>
+    private async Task DecrementarCantidad(int productoId)
     {
         var item = items.First(x => x.ProductoId == productoId);
         if (item.Cantidad > 1)
@@ -132,6 +179,10 @@
         }
     }
 
+    /// <summary>
+    /// Elimina un item del carrito después de confirmar con el usuario
+    /// </summary>
+    /// <param name="productoId">ID del producto a eliminar</param>
     private async Task EliminarItem(int productoId)
     {
         bool confirmar = await JS.InvokeAsync<bool>("confirm", "¿Está seguro que desea eliminar este producto del carrito?");
@@ -142,12 +193,18 @@
         }
     }
 
+    /// <summary>
+    /// Vacía el carrito completamente
+    /// </summary>
     private void VaciarCarrito()
     {
         CarritoService.LimpiarCarrito();
         CargarCarrito();
     }
 
+    /// <summary>
+    /// Solicita confirmación al usuario antes de vaciar el carrito
+    /// </summary>
     private async Task ConfirmarVaciarCarrito()
     {
         bool confirmar = await JS.InvokeAsync<bool>("confirm", "¿Está seguro que desea vaciar el carrito?");
@@ -157,11 +214,17 @@
         }
     }
 
+    /// <summary>
+    /// Navega al catálogo de productos
+    /// </summary>
     private void VolverACatalogo()
     {
         NavigationManager.NavigateTo("/");
     }
 
+    /// <summary>
+    /// Navega a la página de confirmación de compra
+    /// </summary>
     private void ConfirmarCompra()
     {
         NavigationManager.NavigateTo("/confirmar-compra");

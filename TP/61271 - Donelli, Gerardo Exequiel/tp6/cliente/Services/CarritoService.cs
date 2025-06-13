@@ -29,6 +29,7 @@ public class CarritoService
     /// Obtiene la lista de items en el carrito
     /// </summary>
     public IReadOnlyList<ItemCarrito> ObtenerItems() => _items.AsReadOnly();
+    //IReadOnlyList<ItemCarrito> es una interfaz que permite acceder a la lista sin modificarla directamente.
 
     /// <summary>
     /// Obtiene la cantidad total de items en el carrito

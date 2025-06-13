@@ -23,6 +23,10 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+app.UseDefaultFiles(); // opcional, sirve index.html por defecto
+app.UseStaticFiles();  // habilita servir contenido de wwwroot
+
+
 // Asegurar que la base de datos está creada y sembrada con datos iniciales
 using (var scope = app.Services.CreateScope())
 {
@@ -30,7 +34,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<TiendaContext>();
-        DbInitializer.Initialize(context);
+        ProductosSeed.Initialize(context);
     }
     catch (Exception ex)
     {
@@ -51,27 +55,21 @@ app.UseCors("AllowClientApp");
 app.MapGet("/", () => "Servidor API está en funcionamiento");
 
 // Endpoint para obtener productos con filtro opcional por nombre
-app.MapGet("/api/productos", async (string? nombre, TiendaContext db) =>
+app.MapGet("/api/productos", async (string? busqueda, TiendaContext db) =>
 {
     var query = db.Productos.AsQueryable();
-    
-    if (!string.IsNullOrEmpty(nombre))
-    {
-        query = query.Where(p => p.Nombre.Contains(nombre));
-    }
-    
-    var productos = await query.Select(p => new
-    {
-        p.Id,
-        p.Nombre,
-        p.Descripcion,
-        p.Precio,
-        p.Stock,
-        p.ImagenUrl
-    }).ToListAsync();
 
+    if (!string.IsNullOrWhiteSpace(busqueda))
+    {
+        busqueda = busqueda.ToLower();
+        query = query.Where(p => 
+            p.Nombre.ToLower().Contains(busqueda));
+    }
+
+    var productos = await query.ToListAsync();
     return Results.Ok(productos);
 });
+
 
 // Endpoint para registrar una nueva compra
 app.MapPost("/api/compras", async (CompraDTO compraDTO, TiendaContext db) =>
@@ -162,5 +160,6 @@ app.MapPost("/api/compras", async (CompraDTO compraDTO, TiendaContext db) =>
         return Results.StatusCode(500);
     }
 });
+
 
 app.Run();

@@ -15,4 +15,6 @@ builder.Services.AddScoped<ProductosService>();
 builder.Services.AddScoped<CarritoService>();
 builder.Services.AddScoped<PageTitleService>();
 
+
+
 await builder.Build().RunAsync();

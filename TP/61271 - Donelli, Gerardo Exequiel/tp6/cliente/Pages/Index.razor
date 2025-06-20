@@ -52,6 +52,8 @@
         PageTitleService.Title = "Catálogo - Tienda Online";
         productos = await ProductosService.ObtenerProductosAsync();
 
+           await CarritoService.InicializarAsync();
+
         CarritoService.OnChange += StateHasChanged;
         CarritoService.OnStockActualizar += ActualizarStock;
     }
